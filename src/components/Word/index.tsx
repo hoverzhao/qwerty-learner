@@ -5,14 +5,34 @@ import useSounds from 'hooks/useSounds'
 import style from './index.module.css'
 import usePronunciationSound from 'hooks/usePronunciation'
 
-const EXPLICIT_SPACE = '␣'
+// import { SwitcherStateType, SwitcherDispatchType } from '../../pages/Typing/hooks/useSwitcherState'
 
+// import useSwitcherState from '../../pages/Typing/hooks/useSwitcherState'
+
+const EXPLICIT_SPACE = '␣'
+// const RCOUNT = 0
+const REPEAT_CNT = 0
+const WRONG_CNT = 2
+const HIDE_REPEAT_CNT = 1
 const Word: React.FC<WordProps> = ({ word = 'defaultWord', onFinish, isStart, wordVisible = true }) => {
   // Used in `usePronunciationSound`.
   const originalWord = word
+  // const baseword = word
+  let [repeadCount, setRepeadCount] = useState(REPEAT_CNT)
+  let [wrongCount, setWrongCount] = useState(WRONG_CNT)
+  let [hideRepeadCount, setHideRepeadCount] = useState(HIDE_REPEAT_CNT)
+  const [isVisable, setIsVisable] = useState(true)
+  const [decWrong, setDecWrong] = useState(false)
+  if (!wordVisible) {
+    repeadCount = -1
+  }
 
   word = word.replace(new RegExp(' ', 'g'), EXPLICIT_SPACE)
   word = word.replace(new RegExp('…', 'g'), '..')
+  // word = word + EXPLICIT_SPACE + word + EXPLICIT_SPACE
+  // for (let i = 0; i < RCOUNT; i++) {
+  //   word = word + EXPLICIT_SPACE + baseword
+  // }
 
   const [inputWord, setInputWord] = useState('')
   const [statesList, setStatesList] = useState<LetterState[]>([])
@@ -66,7 +86,7 @@ const Word: React.FC<WordProps> = ({ word = 'defaultWord', onFinish, isStart, wo
         setHasWrong(false)
       }, 300)
     }
-  }, [hasWrong, isFinish, playBeepSound])
+  }, [hasWrong, playBeepSound])
 
   useEffect(() => {
     if (isStart && inputWord.length === 0) {
@@ -75,6 +95,24 @@ const Word: React.FC<WordProps> = ({ word = 'defaultWord', onFinish, isStart, wo
     // SAFETY: Don't depend on `playPronounce`! It will cost audio play again and again.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isStart, word, inputWord])
+
+  useEffect(() => {
+    if (hasWrong) {
+      if (decWrong) {
+        setDecWrong(false)
+        if (wrongCount > 0) {
+          setWrongCount(wrongCount - 1)
+        } else {
+          setRepeadCount(REPEAT_CNT)
+          setWrongCount(WRONG_CNT)
+          setHideRepeadCount(HIDE_REPEAT_CNT)
+          setIsVisable(true)
+        }
+      }
+    }
+    // SAFETY: Don't depend on `playPronounce`! It will cost audio play again and again.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasWrong, decWrong, wrongCount])
 
   useLayoutEffect(() => {
     let hasWrong = false,
@@ -89,15 +127,25 @@ const Word: React.FC<WordProps> = ({ word = 'defaultWord', onFinish, isStart, wo
         hasWrong = true
         statesList.push('wrong')
         setHasWrong(true)
+        if (repeadCount < 0) {
+          setDecWrong(true)
+        }
         break
       }
     }
 
     if (!hasWrong && inputWordLength >= wordLength) {
-      setIsFinish(true)
+      if (repeadCount < 0 && hideRepeadCount < 0) {
+        setIsFinish(true)
+      } else {
+        repeadCount >= 0 ? setRepeadCount((c) => c - 1) : setHideRepeadCount((c) => c - 1)
+        repeadCount < 0 ? setIsVisable(false) : setIsVisable(true)
+        console.log('repead count = ' + repeadCount + '\n')
+        setInputWord('')
+      }
     }
     setStatesList(statesList)
-  }, [inputWord, word])
+  }, [inputWord, word, isVisable, repeadCount, hideRepeadCount])
 
   return (
     <div className={`pt-4 pb-1 flex items-center justify-center ${hasWrong ? style.wrong : ''}`}>
@@ -106,7 +154,8 @@ const Word: React.FC<WordProps> = ({ word = 'defaultWord', onFinish, isStart, wo
         return (
           <Letter
             key={`${index}-${t}`}
-            visible={statesList[index] === 'correct' ? true : wordVisible}
+            visible={statesList[index] === 'correct' ? true : isVisable && wordVisible}
+            // visible={statesList[index] === 'correct' ? true : wordVisible}
             letter={t}
             state={statesList[index]}
           />

@@ -2,6 +2,7 @@ import React from 'react'
 
 export type LetterState = 'normal' | 'correct' | 'wrong'
 
+// const EXPLICIT_SPACE = ' '
 const EXPLICIT_SPACE = '␣'
 
 const stateClassNameMap: Record<string, Record<LetterState, string>> = {
@@ -23,7 +24,7 @@ const Letter: React.FC<LetterProps> = ({ letter, state = 'normal', visible }) =>
       stateClassNameMap[((letter === EXPLICIT_SPACE) as unknown) as string][state]
     } pr-0.8 duration-0 dark:text-opacity-80`}
   >
-    {visible ? letter : '_'}
+    {visible ? letter : letter === '␣' ? letter : '_'}
   </span>
 )
 

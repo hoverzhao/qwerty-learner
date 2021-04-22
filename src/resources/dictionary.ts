@@ -84,6 +84,22 @@ export const dictionaries: Dictionary[] = [
     length: 32,
   },
   {
+    id: 'nodepath',
+    name: 'JS: node path',
+    description: 'JavaScript API 词典',
+    category: '代码练习',
+    url: './dicts/Node-path.json',
+    length: 14,
+  },
+  {
+    id: 'nodefs',
+    name: 'JS: node file',
+    description: 'JavaScript API 词典',
+    category: '代码练习',
+    url: './dicts/Node-fs.json',
+    length: 99,
+  },
+  {
     id: 'javeArrayList',
     name: 'Java: ArrayList',
     description: 'JavaScript API 词典',
